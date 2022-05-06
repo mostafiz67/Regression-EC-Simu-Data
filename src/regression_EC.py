@@ -23,7 +23,8 @@ from typing_extensions import Literal
 
 np.random.seed(42)
 
-ECMethod = Literal["ratio", "ratio-diff", "ratio-signed", "ratio-diff-signed", "intersection_union_sample", "intersection_union_all"]
+ECMethod = Literal["ratio", "ratio-diff", "ratio-signed", "ratio-diff-signed", 
+                    "intersection_union_sample", "intersection_union_all", "intersection_union_distance"]
 
 
 def generate_normal_data(
@@ -84,6 +85,34 @@ def generate_uniform_sub_data(
         y_train.reshape(-1, 1),
         y_test.reshape(-1, 1),
     )
+def generate_uniform_add_sub_data(
+    train_size: int,
+    test_size: int,
+    sigma: float,
+    n_outliers: int,
+    heteroscedastic_value: int,
+    bounds: Tuple[int, int] = (-100, 100)
+) -> Tuple[ndarray, ndarray, ndarray, ndarray]:
+    X_train_add = np.random.uniform(bounds[0], bounds[1], size=train_size//2)
+    y_train_add = X_train_add + np.random.uniform(0, sigma, size=train_size//2)
+    X_train_sub = np.random.uniform(bounds[0], bounds[1], size=train_size//2)
+    y_train_sub = X_train_sub - np.random.uniform(0, sigma, size=train_size//2)
+    X_train = X_train_add + X_train_sub
+    y_train = y_train_add + y_train_sub
+
+    X_test_add = np.random.uniform(bounds[0], bounds[1], size=test_size//2)
+    y_test_add = X_test_add + np.random.uniform(0, sigma, size=test_size//2)
+    X_test_sub = np.random.uniform(bounds[0], bounds[1], size=test_size//2)
+    y_test_sub = X_test_add - np.random.uniform(0, sigma, size=test_size//2)
+    X_test = X_test_add + X_test_sub
+    y_test = y_test_add + y_test_sub
+    return (
+        X_train.reshape(-1, 1),
+        X_test.reshape(-1, 1),
+        y_train.reshape(-1, 1),
+        y_test.reshape(-1, 1),
+    )
+
 def generate_heteroscedastic(
     train_size: int,
     test_size: int,
@@ -168,6 +197,10 @@ def regression_ec(residuals: List[ndarray], method: ECMethod) -> List[ndarray]:
             denominator = np.select(conditions, choice_denominator, np.add(np.abs(r1), np.abs(r2)))
             consistency = np.divide(np.sum(numerator), np.sum(denominator)) # all sum and then divide
             consistency = np.nan_to_num(consistency, copy=True, nan=1.0)
+        elif method =="intersection_union_distance":
+            conditions = [(r1>=0)&(r2>=0), (r1<=0)&(r2<=0)]
+            choiceValue = [np.abs(np.subtract(np.abs(r1), np.abs(r2))), np.add(np.abs(r1), np.abs(r2))]
+            consistency = np.select(conditions, choiceValue, np.add(np.abs(r1), np.abs(r2)))
         else:
             raise ValueError("Invalid method")
         consistencies.append(consistency)
@@ -264,17 +297,19 @@ def analyse_sigma_ECs(
 
 if __name__ == "__main__":
     DATASETS = {
-        "Heteroscedastic": generate_heteroscedastic,
-        "Outliers": generate_outliers,
-        "Norm": generate_normal_data,
-        "Uniform+": generate_uniform_add_data,
-        "Uniform-": generate_uniform_sub_data,
+        # "Heteroscedastic": generate_heteroscedastic,
+        # "Outliers": generate_outliers,
+        # "Norm": generate_normal_data,
+        # "Uniform+": generate_uniform_add_data,
+        # "Uniform-": generate_uniform_sub_data,
+        "Uniform+-": generate_uniform_add_sub_data
     }
     REGRESSORS = {"LinReg": LinearRegression(), 
-    "Knn-1": KNeighborsRegressor(n_neighbors=1),
-    "Knn-5": KNeighborsRegressor(n_neighbors=5)
+                    "Knn-1": KNeighborsRegressor(n_neighbors=1),
+                    "Knn-5": KNeighborsRegressor(n_neighbors=5)
     }
-    EC_METHODS: List[ECMethod] = ["ratio", "ratio-diff", "ratio-signed", "ratio-diff-signed", "intersection_union_sample", "intersection_union_all"]
+    EC_METHODS: List[ECMethod] = ["ratio", "ratio-diff", "ratio-signed", "ratio-diff-signed", 
+                                "intersection_union_sample", "intersection_union_all", "intersection_union_distance"]
     BOUNDS = (-100, 100)
     SIGMA_RANGE = (0.1, float(max(BOUNDS)))
     N_OUTLIERS = (1, 5)
