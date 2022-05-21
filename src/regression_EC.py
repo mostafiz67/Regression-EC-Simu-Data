@@ -1,7 +1,8 @@
 """
 Author: Md Mostafizur Rahman
-File: Calculating Regression Error Consistency using different methods and
-random dataset
+File: Calculating Regression Error Consistency using different methods and random dataset
+
+Some code is inherited from https://stackoverflow.com/questions/71430032/how-to-compare-two-numpy-arrays-with-multiple-condition
 """
 
 from itertools import combinations
