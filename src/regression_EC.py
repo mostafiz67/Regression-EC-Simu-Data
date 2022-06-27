@@ -299,11 +299,11 @@ def analyse_sigma_ECs(
 
 if __name__ == "__main__":
     DATASETS = {
-        # "Heteroscedastic": generate_heteroscedastic,
-        # "Outliers": generate_outliers,
-        # "Norm": generate_normal_data,
-        # "Uniform+": generate_uniform_add_data,
-        # "Uniform-": generate_uniform_sub_data,
+        "Heteroscedastic": generate_heteroscedastic,
+        "Outliers": generate_outliers,
+        "Norm": generate_normal_data,
+        "Uniform+": generate_uniform_add_data,
+        "Uniform-": generate_uniform_sub_data,
         "Uniform+-": generate_uniform_add_sub_data
     }
     REGRESSORS = {"LinReg": LinearRegression(), 
