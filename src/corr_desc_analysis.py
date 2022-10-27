@@ -27,12 +27,24 @@ def correlation_analysis() -> DataFrame:
     return corr_df
 
 
-def describe_analysis() -> DataFrame:
+def describe_analysis_overall() -> DataFrame:
     descr = {}
     for csv in CSVS:
         error_kind = csv.stem[: csv.stem.find("_")]
         df = pd.read_csv(csv).drop(columns=["Unnamed: 0", "k", "n_rep"])
         des = df.groupby(["Method"]).describe().round(2).EC
+        descr[error_kind] = des.T
+        # descr.append(des)
+
+    descr_df = pd.concat(descr, axis="columns")
+    return descr_df.stack(1).reorder_levels([0, 1])
+
+def describe_analysis() -> DataFrame:
+    descr = {}
+    for csv in CSVS:
+        error_kind = csv.stem[: csv.stem.find("_")]
+        df = pd.read_csv(csv).drop(columns=["Unnamed: 0", "k", "n_rep"])
+        des = df.groupby(["Regressor", "Method"]).describe().round(2).EC
         descr[error_kind] = des.T
         # descr.append(des)
 
@@ -45,6 +57,10 @@ if __name__ == "__main__":
     # corr_outfile = ROOT / "EC_correlations.csv"
     # corr_df.to_csv(corr_outfile)
 
+    # descr_df_overall = describe_analysis_overall()
+    # descr_outfile = ROOT / "EC_descriptions_overall.csv"
+    # descr_df_overall.to_csv(descr_outfile)
+
     descr_df = describe_analysis()
-    descr_outfile = ROOT / "EC_descriptions_overall.csv"
+    descr_outfile = ROOT / "EC_descriptions.csv"
     descr_df.to_csv(descr_outfile)
